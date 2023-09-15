@@ -18,4 +18,4 @@ def get_weather(city):
     return weather_data['fact']
 
 
-print(get_weather('Калининград'))
+# print(get_weather('Калининград'))
