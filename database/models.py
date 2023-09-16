@@ -2,11 +2,13 @@ from sqlalchemy import Column, Integer, BigInteger, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from datetime import datetime
 
+from settings import database_config
+
 Base = declarative_base()
-engine = create_engine("sqlite:////home/user/dev/weatherbot/db.db", echo=True)
+engine = create_engine(database_config.url, echo=True)
 
 
-class Users(Base):
+class User(Base):
     __tablename__ = 'Users'
     id = Column(Integer, primary_key=True)
     tg_id = Column(BigInteger, nullable=False)

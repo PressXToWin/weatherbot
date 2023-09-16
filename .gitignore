@@ -161,3 +161,4 @@ cython_debug/
 settings/api_config.py
 db.db
 /settings/bot_config.py
+/settings/database_config.py

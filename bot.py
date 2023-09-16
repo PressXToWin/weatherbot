@@ -5,6 +5,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from settings import bot_config
 from api_requests import request
+from database import orm
 
 bot = Bot(token=bot_config.bot_token)
 storage = MemoryStorage()
@@ -17,6 +18,7 @@ class ChoiceCityWeather(StatesGroup):
 
 @dp.message_handler(commands=['start'])
 async def start_message(message: types.Message):
+    orm.add_user(message.from_user.id)
     markup = types.reply_keyboard.ReplyKeyboardMarkup(row_width=2)
     btn1 = types.KeyboardButton('Погода в моём городе')
     btn2 = types.KeyboardButton('Погода в другом месте')
