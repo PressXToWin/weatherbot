@@ -16,6 +16,10 @@ class ChoiceCityWeather(StatesGroup):
     waiting_city = State()
 
 
+class SetUserCity(StatesGroup):
+    waiting_city = State()
+
+
 @dp.message_handler(commands=['start'])
 async def start_message(message: types.Message):
     orm.add_user(message.from_user.id)
@@ -72,6 +76,32 @@ async def city_chosen(message: types.Message, state: FSMContext):
     city = await state.get_data()
     data = request.get_weather(city.get('waiting_city'))
     text = f'Погода в {city.get("waiting_city")}\nТемпература: {data["temp"]} С\nОщущается как: {data["feels_like"]} C\nСкорость ветра: {data["wind_speed"]} м/с\nДавление: {data["pressure_mm"]} мм'
+    await message.answer(text, reply_markup=markup)
+    await state.finish()
+
+
+@dp.message_handler(regexp='Установить свой город')
+async def city_start(message: types.Message):
+    markup = types.reply_keyboard.ReplyKeyboardMarkup(row_width=2)
+    btn1 = types.KeyboardButton('Меню')
+    markup.add(btn1)
+    text = 'Из какого вы города?'
+    await message.answer(text, reply_markup=markup)
+    await SetUserCity.waiting_city.set()
+
+
+@dp.message_handler(state=SetUserCity.waiting_city)
+async def city_chosen(message: types.Message, state: FSMContext):
+    await state.update_data(waiting_city=message.text)
+    user_data = await state.get_data()
+    orm.set_user_city(message.from_user.id, user_data.get('waiting_city'))
+    markup = types.reply_keyboard.ReplyKeyboardMarkup(row_width=2)
+    btn1 = types.KeyboardButton('Погода в моём городе')
+    btn2 = types.KeyboardButton('Погода в другом месте')
+    btn3 = types.KeyboardButton('История')
+    btn4 = types.KeyboardButton('Установить свой город')
+    markup.add(btn1, btn2, btn3, btn4)
+    text = f'Ваш город {user_data.get("waiting_city")}.'
     await message.answer(text, reply_markup=markup)
     await state.finish()
 

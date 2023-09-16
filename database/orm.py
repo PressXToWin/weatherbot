@@ -17,3 +17,8 @@ def add_user(tg_id):
         session.add((new_user))
         session.commit()
 
+def set_user_city(tg_id, city):
+    session = Session()
+    user = session.query(User).filter(User.tg_id == tg_id).first()
+    user.city = city
+    session.commit()
