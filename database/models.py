@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, BigInteger, String, DateTime, ForeignKey, create_engine
-from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from datetime import datetime
+
+from sqlalchemy import (BigInteger, Column, DateTime, ForeignKey, Integer,
+                        String, create_engine)
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 from settings import database_config
 
@@ -14,7 +16,12 @@ class User(Base):
     tg_id = Column(BigInteger, nullable=False)
     city = Column(String)
     connection_date = Column(DateTime, nullable=False, default=datetime.now())
-    reports = relationship('WeatherReport', backref='report', lazy=True, cascade='all, delete-orphan')
+    reports = relationship(
+        'WeatherReport',
+        backref='report',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
 
     def __repr__(self):
         return self.tg_id

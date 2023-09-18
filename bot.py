@@ -1,19 +1,21 @@
-from aiogram import Bot, Dispatcher, types, executor
+import math
+
+from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
-import math
 
-from settings import bot_config
 from api_requests import request
 from database import orm
+from settings import bot_config
 
 bot = Bot(token=bot_config.bot_token)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
 
-PAGE_SIZE = 6
+PAGE_SIZE = 4
+
 
 class ChoiceCityWeather(StatesGroup):
     waiting_city = State()
@@ -26,13 +28,9 @@ class SetUserCity(StatesGroup):
 @dp.message_handler(commands=['start'])
 async def start_message(message: types.Message):
     orm.add_user(message.from_user.id)
-    markup = types.reply_keyboard.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    btn1 = types.KeyboardButton('Погода в моём городе')
-    btn2 = types.KeyboardButton('Погода в другом месте')
-    btn3 = types.KeyboardButton('История')
-    btn4 = types.KeyboardButton('Установить свой город')
-    markup.add(btn1, btn2, btn3, btn4)
-    text = f'Привет, {message.from_user.first_name}, я бот, который расскажет тебе о погоде на сегодня.'
+    markup = await main_menu()
+    text = (f'Привет, {message.from_user.first_name}, '
+            'я бот, который расскажет тебе о погоде на сегодня.')
     await message.answer(text, reply_markup=markup)
 
 
@@ -53,18 +51,17 @@ async def start_message(message: types.Message):
     data = request.get_weather(city)
     orm.create_report(message.from_user.id, data["temp"], data["feels_like"], data["wind_speed"], data["pressure_mm"],
                       city)
-    text = f'Погода в {city}\nТемпература: {data["temp"]} С\nОщущается как: {data["feels_like"]} C\nСкорость ветра: {data["wind_speed"]} м/с\nДавление: {data["pressure_mm"]} мм'
+    text = (f'Погода в {city}\n'
+            f'Температура: {data["temp"]} С\n'
+            f'Ощущается как: {data["feels_like"]} C\n'
+            f'Скорость ветра: {data["wind_speed"]} м/с\n'
+            f'Давление: {data["pressure_mm"]} мм')
     await message.answer(text, reply_markup=markup)
 
 
 @dp.message_handler(regexp='Меню')
 async def start_message(message: types.Message):
-    markup = types.reply_keyboard.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    btn1 = types.KeyboardButton('Погода в моём городе')
-    btn2 = types.KeyboardButton('Погода в другом месте')
-    btn3 = types.KeyboardButton('История')
-    btn4 = types.KeyboardButton('Установить свой город')
-    markup.add(btn1, btn2, btn3, btn4)
+    markup = await main_menu()
     text = f'Привет, {message.from_user.first_name}, я бот, который расскажет тебе о погоде на сегодня.'
     await message.answer(text, reply_markup=markup)
 
@@ -86,17 +83,16 @@ async def city_chosen(message: types.Message, state: FSMContext):
         await state.finish()
         return
     await state.update_data(waiting_city=message.text)
-    markup = types.reply_keyboard.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    btn1 = types.KeyboardButton('Погода в моём городе')
-    btn2 = types.KeyboardButton('Погода в другом месте')
-    btn3 = types.KeyboardButton('История')
-    btn4 = types.KeyboardButton('Установить свой город')
-    markup.add(btn1, btn2, btn3, btn4)
+    markup = await main_menu()
     city = await state.get_data()
     data = request.get_weather(city.get('waiting_city'))
     orm.create_report(message.from_user.id, data["temp"], data["feels_like"], data["wind_speed"], data["pressure_mm"],
                       city.get("waiting_city"))
-    text = f'Погода в {city.get("waiting_city")}\nТемпература: {data["temp"]} С\nОщущается как: {data["feels_like"]} C\nСкорость ветра: {data["wind_speed"]} м/с\nДавление: {data["pressure_mm"]} мм'
+    text = (f'Погода в {city.get("waiting_city")}\n'
+            f'Температура: {data["temp"]} С\n'
+            f'Ощущается как: {data["feels_like"]} C\n'
+            f'Скорость ветра: {data["wind_speed"]} м/с\n'
+            f'Давление: {data["pressure_mm"]} мм')
     await message.answer(text, reply_markup=markup)
     await state.finish()
 
@@ -120,12 +116,7 @@ async def city_chosen(message: types.Message, state: FSMContext):
     await state.update_data(waiting_city=message.text)
     user_data = await state.get_data()
     orm.set_user_city(message.from_user.id, user_data.get('waiting_city'))
-    markup = types.reply_keyboard.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
-    btn1 = types.KeyboardButton('Погода в моём городе')
-    btn2 = types.KeyboardButton('Погода в другом месте')
-    btn3 = types.KeyboardButton('История')
-    btn4 = types.KeyboardButton('Установить свой город')
-    markup.add(btn1, btn2, btn3, btn4)
+    markup = await main_menu()
     text = f'Ваш город {user_data.get("waiting_city")}.'
     await message.answer(text, reply_markup=markup)
     await state.finish()
@@ -272,6 +263,18 @@ async def callback_query(call, state: FSMContext):
                 types.InlineKeyboardButton(text='Вперёд', callback_data=f'next_{data["current_page"]}')
             )
             await call.message.edit_text(text='История запросов:', reply_markup=inline_markup)
+
+
+async def main_menu():
+    markup = types.reply_keyboard.ReplyKeyboardMarkup(
+        row_width=2, resize_keyboard=True
+    )
+    btn1 = types.KeyboardButton('Погода в моём городе')
+    btn2 = types.KeyboardButton('Погода в другом месте')
+    btn3 = types.KeyboardButton('История')
+    btn4 = types.KeyboardButton('Установить свой город')
+    markup.add(btn1, btn2, btn3, btn4)
+    return markup
 
 
 if __name__ == '__main__':
