@@ -77,6 +77,10 @@ async def city_start(message: types.Message):
 
 @dp.message_handler(state=ChoiceCityWeather.waiting_city)
 async def city_chosen(message: types.Message, state: FSMContext):
+    if message.text == 'Меню':
+        await start_message(message)
+        await state.finish()
+        return
     await state.update_data(waiting_city=message.text)
     markup = types.reply_keyboard.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
     btn1 = types.KeyboardButton('Погода в моём городе')
@@ -104,6 +108,10 @@ async def city_start(message: types.Message):
 
 @dp.message_handler(state=SetUserCity.waiting_city)
 async def city_chosen(message: types.Message, state: FSMContext):
+    if message.text == 'Меню':
+        await start_message(message)
+        await state.finish()
+        return
     await state.update_data(waiting_city=message.text)
     user_data = await state.get_data()
     orm.set_user_city(message.from_user.id, user_data.get('waiting_city'))
