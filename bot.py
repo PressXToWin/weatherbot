@@ -2,6 +2,7 @@ from aiogram import Bot, Dispatcher, types, executor
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+import math
 
 from settings import bot_config
 from api_requests import request
@@ -48,7 +49,8 @@ async def start_message(message: types.Message):
         await message.answer(text, reply_markup=markup)
         return
     data = request.get_weather(city)
-    orm.create_report(message.from_user.id, data["temp"], data["feels_like"], data["wind_speed"], data["pressure_mm"], city)
+    orm.create_report(message.from_user.id, data["temp"], data["feels_like"], data["wind_speed"], data["pressure_mm"],
+                      city)
     text = f'Погода в {city}\nТемпература: {data["temp"]} С\nОщущается как: {data["feels_like"]} C\nСкорость ветра: {data["wind_speed"]} м/с\nДавление: {data["pressure_mm"]} мм'
     await message.answer(text, reply_markup=markup)
 
@@ -90,7 +92,8 @@ async def city_chosen(message: types.Message, state: FSMContext):
     markup.add(btn1, btn2, btn3, btn4)
     city = await state.get_data()
     data = request.get_weather(city.get('waiting_city'))
-    orm.create_report(message.from_user.id, data["temp"], data["feels_like"], data["wind_speed"], data["pressure_mm"], city.get("waiting_city"))
+    orm.create_report(message.from_user.id, data["temp"], data["feels_like"], data["wind_speed"], data["pressure_mm"],
+                      city.get("waiting_city"))
     text = f'Погода в {city.get("waiting_city")}\nТемпература: {data["temp"]} С\nОщущается как: {data["feels_like"]} C\nСкорость ветра: {data["wind_speed"]} м/с\nДавление: {data["pressure_mm"]} мм'
     await message.answer(text, reply_markup=markup)
     await state.finish()
@@ -124,6 +127,29 @@ async def city_chosen(message: types.Message, state: FSMContext):
     text = f'Ваш город {user_data.get("waiting_city")}.'
     await message.answer(text, reply_markup=markup)
     await state.finish()
+
+
+@dp.message_handler(regexp='История')
+async def get_reports(message: types.Message):
+    current_page = 1
+    reports = orm.get_reports(message.from_user.id)
+    total_pages = math.ceil(len(reports) / 4)
+    text = 'История запросов:'
+    inline_markup = types.InlineKeyboardMarkup()
+    for report in reports[:current_page * 4]:
+        inline_markup.add(
+            types.InlineKeyboardButton(
+                text=f'{report.city} - {report.date.day}.{report.date.month}.{report.date.year}',
+                callback_data=f'report_{report.id}'
+            )
+        )
+    current_page += 1
+    inline_markup.row(
+        types.InlineKeyboardButton(text=f'{current_page - 1} / {total_pages}', callback_data='None'),
+        types.InlineKeyboardButton(text='Вперёд', callback_data=f'next_{current_page}')
+    )
+    await message.answer(text, reply_markup=inline_markup)
+
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
