@@ -46,3 +46,9 @@ def get_reports(tg_id):
     reports = user.reports
     return reports
 
+def delete_user_report(report_id):
+    session = Session()
+    report = session.get(WeatherReport, report_id)
+    session.delete(report)
+    session.commit()
+
