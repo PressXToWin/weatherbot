@@ -28,8 +28,7 @@ def set_user_city(tg_id, city):
 
 def get_user_city(tg_id):
     session = Session()
-    stmt = select(User).where(User.tg_id == tg_id)
-    user = session.scalar(stmt)
+    user = session.query(User).filter(User.tg_id == tg_id).first()
     return user.city
 
 
@@ -60,3 +59,9 @@ def delete_user_report(report_id):
     report = session.get(WeatherReport, report_id)
     session.delete(report)
     session.commit()
+
+
+def get_all_users():
+    session = Session()
+    users = session.query(User).all()
+    return users
