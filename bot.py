@@ -7,9 +7,9 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from api_requests import request
 from database import orm
-from settings import bot_config
+from settings import settings
 
-bot = Bot(token=bot_config.bot_token)
+bot = Bot(token=settings.bot_token)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
@@ -154,11 +154,11 @@ async def callback_query(call, state: FSMContext):
         await state.update_data(current_page=data['current_page'])
         if query_type == 'next':
             await callback_query_history_next(data, call)
-        if query_type == 'prev':
+        elif query_type == 'prev':
             await callback_query_history_prev(data, call)
-        if query_type == 'report':
+        elif query_type == 'report':
             await callback_query_history_report(data, call)
-        if query_type == 'reports':
+        elif query_type == 'reports':
             await callback_query_history_reports_list(data, call)
 
 
@@ -175,7 +175,7 @@ async def main_menu():
 
 
 @dp.message_handler(lambda message:
-                    message.from_user.id in bot_config.tg_bot_admin
+                    message.from_user.id in settings.tg_bot_admin
                     and message.text == 'Админ'
                     )
 async def admin_panel(message: types.Message):
@@ -189,7 +189,7 @@ async def admin_panel(message: types.Message):
 
 
 @dp.message_handler(lambda message:
-                    message.from_user.id in bot_config.tg_bot_admin
+                    message.from_user.id in settings.tg_bot_admin
                     and message.text == 'Список пользователей'
                     )
 async def get_all_users(message: types.Message):

@@ -1,11 +1,11 @@
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from settings import database_config
+from settings import settings
 
 from .models import Base, User, WeatherReport
 
-engine = create_engine(database_config.url, echo=True)
+engine = create_engine(settings.database_url, echo=True)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 
