@@ -7,7 +7,7 @@ from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from settings import settings
 
 Base = declarative_base()
-engine = create_engine(settings.database_url, echo=True)
+engine = create_engine(settings.DATABASE_URL, echo=True)
 
 
 class User(Base):

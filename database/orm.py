@@ -5,7 +5,7 @@ from settings import settings
 
 from .models import Base, User, WeatherReport
 
-engine = create_engine(settings.database_url, echo=True)
+engine = create_engine(settings.DATABASE_URL, echo=True)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 

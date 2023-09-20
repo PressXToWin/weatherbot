@@ -9,7 +9,7 @@ from api_requests import request
 from database import orm
 from settings import settings
 
-bot = Bot(token=settings.bot_token)
+bot = Bot(token=settings.BOT_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
@@ -176,7 +176,7 @@ async def main_menu():
 
 
 @dp.message_handler(lambda message:
-                    message.from_user.id in settings.tg_bot_admin
+                    message.from_user.id in settings.TG_BOT_ADMIN
                     and message.text == 'Админ'
                     )
 async def admin_panel(message: types.Message):
@@ -190,7 +190,7 @@ async def admin_panel(message: types.Message):
 
 
 @dp.message_handler(lambda message:
-                    message.from_user.id in settings.tg_bot_admin
+                    message.from_user.id in settings.TG_BOT_ADMIN
                     and message.text == 'Список пользователей'
                     )
 async def get_all_users(message: types.Message):
