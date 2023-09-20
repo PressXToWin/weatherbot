@@ -124,7 +124,7 @@ async def city_chosen(message: types.Message, state: FSMContext):
 @dp.message_handler(regexp='История')
 async def get_reports(message: types.Message):
     current_page = 1
-    reports = orm.get_reports(message.from_user.id)
+    reports = orm.get_reports(message.from_user.id)[::-1]
     total_pages = math.ceil(len(reports) / PAGE_SIZE)
     text = 'История запросов:'
     inline_markup = types.InlineKeyboardMarkup()
@@ -152,14 +152,15 @@ async def callback_query(call, state: FSMContext):
     async with state.proxy() as data:
         data['current_page'] = int(call.data.split('_')[1])
         await state.update_data(current_page=data['current_page'])
+        reports = orm.get_reports(call.from_user.id)[::-1]
         if query_type == 'next':
-            await callback_query_history_next(data, call)
+            await callback_query_history_next(reports, data, call)
         elif query_type == 'prev':
-            await callback_query_history_prev(data, call)
+            await callback_query_history_prev(reports, data, call)
         elif query_type == 'report':
-            await callback_query_history_report(data, call)
+            await callback_query_history_report(reports, data, call)
         elif query_type == 'reports':
-            await callback_query_history_reports_list(data, call)
+            await callback_query_history_reports_list(reports, data, call)
 
 
 async def main_menu():
@@ -335,8 +336,7 @@ async def delete_report(call):
     return
 
 
-async def callback_query_history_next(data, call):
-    reports = orm.get_reports(call.from_user.id)
+async def callback_query_history_next(reports, data, call):
     total_pages = math.ceil(len(reports) / PAGE_SIZE)
     inline_markup = types.InlineKeyboardMarkup()
     if data['current_page'] * PAGE_SIZE >= len(reports):
@@ -366,8 +366,7 @@ async def callback_query_history_next(data, call):
     await call.message.edit_text(text="История запросов:", reply_markup=inline_markup)
 
 
-async def callback_query_history_prev(data, call):
-    reports = orm.get_reports(call.from_user.id)
+async def callback_query_history_prev(reports, data, call):
     total_pages = math.ceil(len(reports) / PAGE_SIZE)
     inline_markup = types.InlineKeyboardMarkup()
     if data['current_page'] == 1:
@@ -397,8 +396,7 @@ async def callback_query_history_prev(data, call):
     await call.message.edit_text(text="История запросов:", reply_markup=inline_markup)
 
 
-async def callback_query_history_report(data, call):
-    reports = orm.get_reports(call.from_user.id)
+async def callback_query_history_report(reports, data, call):
     report_id = call.data.split('_')[1]
     inline_markup = types.InlineKeyboardMarkup()
     for report in reports:
@@ -419,8 +417,7 @@ async def callback_query_history_report(data, call):
             break
 
 
-async def callback_query_history_reports_list(data, call):
-    reports = orm.get_reports(call.from_user.id)
+async def callback_query_history_reports_list(reports, data, call):
     total_pages = math.ceil(len(reports) / PAGE_SIZE)
     inline_markup = types.InlineKeyboardMarkup()
     data['current_page'] = 1
