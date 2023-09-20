@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 GEO_KEY = os.getenv('GEO_KEY')
-WEATHER_KEY = {'X-Yandex-API-Key': os.getenv('WEATHER_KEY')}
+WEATHER_KEY = {'X-Yandex-API-Key': os.getenv('WEATHER_KEY', 'sqlite:////app/bot.db')}
 
 DATABASE_URL = os.getenv('DATABASE_URL')
 

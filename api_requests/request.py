@@ -21,6 +21,3 @@ def get_weather(city):
         headers=settings.WEATHER_KEY)
     weather_data = json.loads(r.text)
     return weather_data['fact']
-
-
-# print(get_weather('Калининград'))
