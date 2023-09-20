@@ -4,10 +4,10 @@ from sqlalchemy import (BigInteger, Column, DateTime, ForeignKey, Integer,
                         String, create_engine)
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
-from settings import database_config
+from settings import settings
 
 Base = declarative_base()
-engine = create_engine(database_config.url, echo=True)
+engine = create_engine(settings.DATABASE_URL, echo=True)
 
 
 class User(Base):
